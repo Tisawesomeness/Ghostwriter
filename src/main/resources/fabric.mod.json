@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "ghostwriter",
+  "version": "${version}",
+  "name": "Ghostwriter",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "GPL-3.0",
+  "icon": "assets/ghostwriter/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "server": [
+      "com.tisawesomeness.ghostwriter.server.GhostwriterServer"
+    ],
+    "main": [
+      "com.tisawesomeness.ghostwriter.Ghostwriter"
+    ]
+  },
+  "mixins": [
+    "ghostwriter.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.8",
+    "fabric": "*",
+    "minecraft": "1.19.1-beta.2"
+  }
+}
