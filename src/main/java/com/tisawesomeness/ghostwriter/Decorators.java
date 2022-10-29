@@ -8,8 +8,10 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class Decorators {
@@ -42,7 +44,7 @@ public class Decorators {
 
     private static final Decorator SHADOW = (serverPlayer, originalText) -> {
         String modified = modifyLongString(originalText);
-        return Text.literal(modified).setStyle(Style.EMPTY.withColor(0x000000));
+        return Text.literal(modified).setStyle(Style.EMPTY.withColor(Formatting.BLACK));
     };
 
     private static final Decorator SNEAK = (serverPlayer, originalText) -> {
@@ -65,7 +67,7 @@ public class Decorators {
                 modified.setCustomName(Text.literal(NASTY_TEXT));
 
                 HoverEvent e = new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackContent(modified));
-                Style style = Style.EMPTY.withColor(0x55ffff).withHoverEvent(e);
+                Style style = Style.EMPTY.withColor(Formatting.AQUA).withHoverEvent(e);
 
                 int itemTagStartIdx = originalText.indexOf("[item]");
                 int itemTagEndIdx = itemTagStartIdx + "[item]".length();
@@ -88,39 +90,35 @@ public class Decorators {
     }
 
     @FunctionalInterface
-    private interface Decorator {
+    public interface Decorator {
         Text decorate(ServerPlayerEntity serverPlayer, String originalText);
+    }
+
+    public static Optional<Decorator> fromStrategy(String strategy) {
+        return switch (strategy.toLowerCase()) {
+            case "none" -> Optional.of(NONE);
+            case "rainbow" -> Optional.of(RAINBOW);
+            case "speed" -> Optional.of(SPEED);
+            case "sleight" -> Optional.of(SLEIGHT);
+            case "shadow" -> Optional.of(SHADOW);
+            case "sneak" -> Optional.of(SNEAK);
+            case "suppress" -> Optional.of(SUPPRESS);
+            case "showcase" -> Optional.of(SHOWCASE);
+            case "sus" -> Optional.of(SUS);
+            default -> Optional.empty();
+        };
     }
 
     private static Decorator currentDecorator = NONE;
 
+    public static void setDecorator(Decorator decorator) {
+        currentDecorator = decorator;
+    }
+
     public static final MessageDecorator DECORATOR = (serverPlayer, component) -> {
         String originalText = component.getString().trim();
-        switch (originalText.toLowerCase()) {
-            case "!rainbow" -> currentDecorator = RAINBOW;
-            // changes "lol" before you can realize
-            case "!speed" -> currentDecorator = SPEED;
-            // changes the start of a sentence while you're focusing on the end
-            case "!sleight" -> currentDecorator = SLEIGHT;
-            // sleight but with hard-to-see text
-            case "!shadow" -> currentDecorator = SHADOW;
-            // sneaks naughty text into a hover event
-            case "!sneak" -> currentDecorator = SNEAK;
-            // inserts completely invisible text, must shift click to see
-            case "!suppress" -> currentDecorator = SUPPRESS;
-            // showcases a held item but changes the display name
-            case "!showcase" -> currentDecorator = SHOWCASE;
-            // among us
-            case "!sus" -> currentDecorator = SUS;
-            // disables modifying the preview (except for commands)
-            case "!none" -> currentDecorator = NONE;
-            default -> {
-                Text output = currentDecorator.decorate(serverPlayer, originalText);
-                return CompletableFuture.completedFuture(output);
-            }
-        }
-        return CompletableFuture.completedFuture(Text.literal("Decorator changed!")
-                .setStyle(Style.EMPTY.withColor(0x00ff00)));
+        Text output = currentDecorator.decorate(serverPlayer, originalText);
+        return CompletableFuture.completedFuture(output);
     };
 
 }
